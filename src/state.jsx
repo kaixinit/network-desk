@@ -136,6 +136,15 @@ export function DeskProvider({ children }) {
   }
   function load(value) {
     const validated = validateRecord(value);
+    if (validated.investigation?.state === "running") {
+      validated.investigation.state = "interrupted";
+      for (const r of Object.values(validated.results)) {
+        if (r.status === "running") {
+          r.status = "unknown";
+          r.summary = "导入的记录尚未完成，该任务不会自动恢复";
+        }
+      }
+    }
     generation.current++;
     running.current.clear();
     window.dispatchEvent(new Event("network-desk:stop"));
@@ -159,6 +168,15 @@ export function DeskProvider({ children }) {
     running.current.clear();
     window.dispatchEvent(new Event("network-desk:stop"));
     patchRecord({
+      ...(recordRef.current.investigation?.state === "running"
+        ? {
+            investigation: {
+              ...recordRef.current.investigation,
+              state: "stopped",
+              finishedAt: new Date().toISOString(),
+            },
+          }
+        : {}),
       results: Object.fromEntries(
         Object.entries(recordRef.current.results).map(([key, value]) => [
           key,

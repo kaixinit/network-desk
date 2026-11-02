@@ -10,8 +10,8 @@ using System.Windows.Forms;
 [assembly: AssemblyProduct("Network Desk")]
 [assembly: AssemblyDescription("网络诊断台免安装启动器")]
 [assembly: AssemblyCompany("Network Desk contributors")]
-[assembly: AssemblyVersion("1.2.8.0")]
-[assembly: AssemblyFileVersion("1.2.8.0")]
+[assembly: AssemblyVersion("1.2.12.0")]
+[assembly: AssemblyFileVersion("1.2.12.0")]
 
 internal static class Launcher
 {

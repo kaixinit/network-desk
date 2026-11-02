@@ -19,8 +19,9 @@ const reply = (body) => ({
   checkedAt: "2026-11-01T14:00:00.000Z",
 });
 
-test("region 403 preserves source, country, HTTP status and challenge reason", async () => {
+test("region 403 preserves live failure and adds a dated reference without claiming support", async () => {
   const lookup = createRegionLookup({
+    now: () => Date.parse("2026-11-03"),
     transport: async () => ({
       status: 403,
       body: "<script>window._cf_chl_opt={}</script>",
@@ -29,7 +30,10 @@ test("region 403 preserves source, country, HTTP status and challenge reason", a
     }),
   });
   const r = await lookup("gpt", "US");
-  assert.equal(r.status, "error");
+  assert.equal(r.status, "unknown");
+  assert.equal(r.liveStatus, "error");
+  assert.equal(r.reference.listed, true);
+  assert.equal(r.reference.expired, false);
   assert.equal(r.httpStatus, 403);
   assert.equal(r.country, "US");
   assert.equal(r.challenge, true);
@@ -51,6 +55,21 @@ test("future region policy stays unknown and retains the effective date", async 
   assert.equal(r.applicable, null);
   assert.equal(r.status, "unknown");
   assert.equal(r.effectiveAt, "2026-11-12T20:20:00Z");
+});
+
+test("HTTP 200 browser verification pages remain unavailable official evidence", async () => {
+  const lookup = createRegionLookup({
+    now: () => Date.parse("2026-11-03"),
+    transport: async () => ({
+      ...reply("<script>window._cf_chl_opt={}</script>"),
+      transportDetails: { tlsMs: 50 },
+    }),
+  });
+  const r = await lookup("gpt", "US");
+  assert.equal(r.status, "unknown");
+  assert.equal(r.sourceFailure, "browser-challenge");
+  assert.equal(r.applicable, null);
+  assert.equal(r.transportDetails.tlsMs, 50);
 });
 test("footer dates and script lists do not masquerade as current region evidence", () => {
   const r = parseRegionPage(
@@ -88,8 +107,12 @@ test("transport failure and changed HTML remain traceable errors, not unsupporte
     },
     async (url) => ({ ...reply("<p>new layout</p>"), url }),
   ]) {
-    const r = await createRegionLookup({ transport })("gpt", "GB");
-    assert.equal(r.status, "error");
+    const r = await createRegionLookup({
+      transport,
+      now: () => Date.parse("2026-11-03"),
+    })("gpt", "GB");
+    assert.equal(r.status, "unknown");
+    assert.equal(r.liveStatus, "error");
     assert.equal(r.applicable, null);
     assert.match(r.source, /openai/);
     assert.equal(r.country, "GB");

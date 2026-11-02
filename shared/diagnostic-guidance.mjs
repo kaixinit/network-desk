@@ -1,5 +1,6 @@
 export const REGION_SOURCES = {
-  claude: "https://www.anthropic.com/supported-countries",
+  claude:
+    "https://support.claude.com/en/articles/8461763-where-can-i-access-claude",
   gpt: "https://help.openai.com/en/articles/7947663-chatgpt-supported-countries",
 };
 

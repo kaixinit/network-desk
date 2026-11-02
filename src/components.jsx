@@ -14,6 +14,7 @@ import {
 import { download } from "./checks.mjs";
 import { desktop } from "./storage.mjs";
 import { egressView } from "../shared/egress-view.mjs";
+import { DeliveryExport } from "./delivery-export.jsx";
 export const Icon = ({ name, ...props }) => (
   <i aria-hidden="true" className={"bi bi-" + name} {...props} />
 );
@@ -289,6 +290,12 @@ export function ReportActions({ compact = false, record: override }) {
   }
   return (
     <div className={"report-actions " + (compact ? "compact" : "")}>
+      {!compact && (
+        <DeliveryExport
+          record={record}
+          modules={module === "all" ? null : [module]}
+        />
+      )}
       <button
         className="link-button"
         onClick={() =>

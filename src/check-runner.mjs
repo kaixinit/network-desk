@@ -8,6 +8,7 @@ import {
 } from "./checks.mjs";
 import { canonicalIP } from "../shared/model.mjs";
 import { REGION_SOURCES } from "../shared/diagnostic-guidance.mjs";
+import { runInvestigation } from "./investigation-runner.mjs";
 export function createChecks(d) {
   const environment = () =>
     d.task("environment", "浏览器与设备环境", async () => ({
@@ -112,7 +113,7 @@ export function createChecks(d) {
         }
         const responses = samples.filter((s) => !s.error);
         const elapsed = responses.map((s) => s.elapsedMs);
-        const latest = responses.at(-1);
+        const latest = responses.at(-1) || samples.at(-1);
         return {
           status: !responses.length
             ? "error"
@@ -120,8 +121,8 @@ export function createChecks(d) {
               ? "unknown"
               : "ok",
           summary: !responses.length
-            ? samples[0].error
-            : `${responses.length}/${count} 次取得响应 · ${latest.opaque ? "浏览器跨域状态不可读" : "HTTP " + latest.httpStatus} · 平均 ${Math.round(elapsed.reduce((a, b) => a + b, 0) / elapsed.length)} ms`,
+            ? latest.error
+            : `${responses.length}/${count} 次取得响应 · ${latest.opaque ? "浏览器跨域状态不可读" : "HTTP " + latest.httpStatus} · 平均 ${Math.round(elapsed.reduce((a, b) => a + b, 0) / elapsed.length)} ms${samples.some((s) => s.recovered) ? " · 首次请求失败后复测恢复，见逐次证据" : ""}`,
           source: definition.url,
           execution,
           target: definition.url,
@@ -136,6 +137,7 @@ export function createChecks(d) {
           },
           limitations: [
             "HTTP/跨域探测耗时不是 ICMP Ping；连通不代表账号注册或登录可用。",
+            ...(latest.action ? [latest.action] : []),
           ],
         };
       },
@@ -203,7 +205,7 @@ export function createChecks(d) {
   async function region(platform, country, refresh = false) {
     return d.task(
       "region:" + platform,
-      "官方支持地区核验",
+      (platform === "gpt" ? "GPT" : "Claude") + " 官方支持地区核验",
       async () => {
         const data = await api("regions", {
           platform,
@@ -229,6 +231,10 @@ export function createChecks(d) {
     );
   }
   async function scan(platform = "home") {
+    if (d.recordRef.current.investigation?.state === "running") {
+      d.setNotice("综合排查正在运行，请等待完成或停止后再单独检测");
+      return;
+    }
     d.setImported(false);
     d.patchRecord({ assessmentSnapshot: null });
     const recordId = d.generation.current;
@@ -250,15 +256,16 @@ export function createChecks(d) {
               "cloudflare",
               platform === "gpt" ? "chatgpt" : "claude",
             ];
-    d.patchRecord({
-      scope: platform,
-      title: {
-        home: "IP 与网络环境",
-        claude: "Claude 环境检测",
-        gpt: "GPT / Codex 环境检测",
-        google: "Google / Gmail 环境检测",
-      }[platform],
-    });
+    if (!d.recordRef.current.investigation)
+      d.patchRecord({
+        scope: platform,
+        title: {
+          home: "IP 与网络环境",
+          claude: "Claude 环境检测",
+          gpt: "GPT / Codex 环境检测",
+          google: "Google / Gmail 环境检测",
+        }[platform],
+      });
     environment();
     const results = await Promise.all(targets.map(exit));
     if (d.generation.current !== recordId) return;
@@ -296,5 +303,19 @@ export function createChecks(d) {
     await Promise.all([...links.map(connectivity), rtc(preferred), dns()]);
     if (d.generation.current === recordId) d.save();
   }
-  return { environment, risk, exit, connectivity, rtc, dns, region, scan };
+  const checks = {
+    environment,
+    risk,
+    exit,
+    connectivity,
+    rtc,
+    dns,
+    region,
+    scan,
+  };
+  return {
+    ...checks,
+    investigate: (scopes, options) =>
+      runInvestigation(d, checks, scopes, options),
+  };
 }

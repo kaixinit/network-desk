@@ -1,10 +1,10 @@
 # GitHub 发布说明
 
-适用 1.2.8。源码公开与公开个人检测报告是两回事。本文提供本地准备步骤，不代表已建立或上传仓库。
+适用 1.2.12。源码公开与公开个人检测报告是两回事。本文提供本地准备步骤，不代表已建立或上传仓库。
 
 ## 上传范围
 
-将最终 `NetworkDesk-1.2.8-source.zip` 解压到新空目录，以内层 `NetworkDesk-1.2.8-source` 为仓库根目录。应直接看到 README、package.json、src、server、desktop、tests；保留隐藏的 `.github`、`.gitignore`、`.npmrc` 和 `.openai/hosting.json`。
+将最终 `NetworkDesk-1.2.12-source.zip` 解压到新空目录，以内层 `NetworkDesk-1.2.12-source` 为仓库根目录。应直接看到 README、package.json、src、server、desktop、tests；保留隐藏的 `.github`、`.gitignore`、`.npmrc` 和 `.openai/hosting.json`。
 
 不要上传整个开发工作区、交付目录、旧镜像、内部设计材料、QA、AppData 或个人报告。源码包含本地构建辅助包 `scripts/temp-cleanup-compat`，不能只复制 package.json 和锁文件。EXE 与运行 ZIP 放 Releases，`*-runtime.exe` 是中间文件，交付使用 `*-portable.exe`。
 

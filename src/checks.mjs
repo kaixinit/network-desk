@@ -1,3 +1,4 @@
+import { compareWebRTC } from "../shared/webrtc-comparison.mjs";
 import {
   canonicalIP,
   parseTrace,
@@ -296,25 +297,8 @@ export async function webrtc(expectedIP) {
     window.removeEventListener("network-desk:stop", cancel);
     pc.close();
   }
-  const publicCandidates = candidates.filter(
-    (x) => x.type === "srflx" && canonicalIP(x.address),
-  );
-  const different =
-    expectedIP && publicCandidates.some((c) => !sameIP(c.address, expectedIP));
   return {
-    state:
-      !publicCandidates.length || !expectedIP
-        ? "unknown"
-        : different
-          ? "different"
-          : "match",
-    reason: !publicCandidates.length
-      ? "未取得可比较的公网 ICE 地址，不能据此认定没有泄露"
-      : !expectedIP
-        ? "尚无目标出口可对照"
-        : different
-          ? "UDP 与所选出口不同；请结合分流规则核对"
-          : "本次可见 UDP 地址与所选出口一致；不代表全部流量",
+    ...compareWebRTC(candidates, expectedIP),
     candidates,
     errors,
     complete,

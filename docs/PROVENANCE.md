@@ -47,3 +47,5 @@
 - Replicate 官方状态入口现重定向到 Cloudflare 的 Replicate 服务： https://status.replicate.com/ 。聚合只采用该组件，不冒用整个 Cloudflare 的状态。
 - xAI 官方文档列出事件订阅 https://docs.x.ai/developers/debugging ；本项目读取 https://status.x.ai/feed.xml 的近期事件，不凭未授权 API 请求判定服务正常。
 - 原创 IP 卡片的配色、几何排版、SVG 序列化与可选透明度动效独立实现；未复制旧站动画或贴纸素材。
+
+地区参考数据：`shared/region-reference.mjs` 仅保存 [OpenAI ChatGPT 官方支持地区](https://help.openai.com/en/articles/7947663-chatgpt-supported-countries) 的事实性国家/地区名称，核对时间 2026-11-02T07:41:23Z，不包含文章正文。它不是 OpenAI API 支持地区名单，不作为实时核验成功结果；30 天后失效。维护者更新时须重新核对官方产品来源、完整列表和核对日期，保留例外条件。

@@ -2,6 +2,7 @@ import { TargetBatch } from "./extended-tools.jsx";
 import { desktop } from "./storage.mjs";
 import { ProxyOptions } from "./network-tools.jsx";
 import { riskResult } from "../shared/model.mjs";
+import { InvestigationPanel, ConclusionCard } from "./investigation.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDesk, navigate } from "./state.jsx";
 import { useChecks } from "./useChecks.jsx";
@@ -84,6 +85,20 @@ function RegionStatus({ platform }) {
       {result && (
         <>
           <ResultLine result={result} />
+          {result.data?.reference && (
+            <p className="fine">
+              官方名单参考（{result.data.reference.verifiedAt.slice(0, 10)}）：
+              {result.data.reference.expired
+                ? "已过期，不用于判定"
+                : result.data.reference.listed
+                  ? "列出此地区"
+                  : "未列出此地区"}
+              。 参考产品：{result.data.reference.product}；本次实时核验未完成。
+              {result.data.reference.restricted
+                ? "官方名单注明部分地区有例外，须另行核对。"
+                : ""}
+            </p>
+          )}
           {result.data?.action && <p className="fine">{result.data.action}</p>}
           <div className="actions">
             <button
@@ -470,6 +485,7 @@ export function PlatformPage({ platform }) {
       initiated.current = true;
       if (
         !d.imported &&
+        !d.record.investigation &&
         (!d.record.results["egress:" + target] ||
           !d.record.results[
             "link:" + (platform === "gpt" ? "openai" : "anthropic")
@@ -561,6 +577,7 @@ export function HomePage() {
       once.current = true;
       if (
         !d.imported &&
+        !d.record.investigation &&
         (!d.record.results["egress:ipv4"] || !d.record.results["link:github"])
       )
         c.scan("home");
@@ -588,6 +605,8 @@ export function HomePage() {
         onRefresh={() => c.scan("home")}
         busy={busy}
       />
+      <InvestigationPanel />
+      <ConclusionCard />
       <Card title="当前网络概览" icon="diagram-3" className="network-overview">
         <div className="home-overview">
           <div className="primary-egress">
@@ -721,6 +740,7 @@ export function GooglePage() {
       once.current = true;
       if (
         !d.imported &&
+        !d.record.investigation &&
         (!d.record.results["egress:ipv4"] || !d.record.results["link:accounts"])
       )
         c.scan("google");

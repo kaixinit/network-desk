@@ -141,7 +141,16 @@ const server = http.createServer(async (req, res) => {
           };
           break;
         case "/api/probe":
-          result = await providers.probe(q);
+          {
+            const controller = new AbortController();
+            res.once("close", () => {
+              if (!res.writableEnded)
+                controller.abort(
+                  new DOMException("客户端已停止检测", "AbortError"),
+                );
+            });
+            result = await providers.probe({ ...q, signal: controller.signal });
+          }
           break;
         case "/api/intelligence":
           result = await providers.intelligence(q.ip, q.provider, config);

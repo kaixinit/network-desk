@@ -1,30 +1,15 @@
 // Network Desk's portable result model. No provider-specific UI assumptions.
 import { boundedJSON, validateObservationData } from "./report-validation.mjs";
+import {
+  validateInvestigation,
+  conclusionSummary,
+  diagnosticObservations,
+} from "./investigation.mjs";
 export const REPORT_SCHEMA = "network-desk/report-v1";
 export const SYSTEM_SCHEMA = "network-desk/system-v1";
-export function canonicalIP(input) {
-  if (
-    typeof input !== "string" ||
-    input.length > 64 ||
-    input !== input.trim() ||
-    /[%\[\]\s]/.test(input)
-  )
-    return null;
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(input)) {
-    const parts = input.split(".");
-    return parts.every((p) => /^(0|[1-9]\d{0,2})$/.test(p) && +p <= 255)
-      ? parts.join(".")
-      : null;
-  }
-  if (!input.includes(":") || !/^[0-9a-f:.]+$/i.test(input)) return null;
-  try {
-    return new URL(`http://[${input}]/`).hostname.slice(1, -1).toLowerCase();
-  } catch {
-    return null;
-  }
-}
-export const sameIP = (a, b) =>
-  Boolean(canonicalIP(a) && canonicalIP(a) === canonicalIP(b));
+import { canonicalIP, sameIP } from "./ip-address.mjs";
+export { canonicalIP, sameIP } from "./ip-address.mjs";
+import { normalizeWebRTCObservation } from "./webrtc-comparison.mjs";
 export function makeRecord(scope, title) {
   const now = new Date().toISOString();
   return {
@@ -211,8 +196,12 @@ export function validateRecord(value) {
     )
       throw new Error("报告检测项格式无效");
     validateObservationData(key, r.data);
+    value.results[key] = normalizeWebRTCObservation(r);
   }
   if (value.system) validateSystem(value.system);
+  validateInvestigation(value.investigation);
+  if (value.diagnosticSummary != null)
+    value.diagnosticSummary = conclusionSummary(value);
   if (
     value.reference &&
     (typeof value.reference !== "object" ||
@@ -391,7 +380,7 @@ function summarizeAssessment(rows) {
   };
 }
 export function summarize(record) {
-  const values = Object.values(record.results);
+  const values = diagnosticObservations(record);
   return {
     total: values.length,
     obtained: values.filter((r) => r.status === "ok").length,
@@ -463,7 +452,7 @@ export function redact(value) {
   return value;
 }
 export function prepareExport(input, masked = false, modules = null) {
-  const source = modules?.length
+  const rawSource = modules?.length
     ? {
         ...input,
         results: Object.fromEntries(
@@ -473,14 +462,39 @@ export function prepareExport(input, masked = false, modules = null) {
         ),
       }
     : input;
+  const source = {
+    ...rawSource,
+    results: Object.fromEntries(
+      Object.entries(rawSource.results).map(([k, r]) => [
+        k,
+        normalizeWebRTCObservation(r),
+      ]),
+    ),
+  };
   const assessment =
     input.assessmentSnapshot || assessReference(input, input.reference);
-  return {
+  const output = {
     ...(masked ? redact(source) : structuredClone(source)),
     redacted: Boolean(masked || input.redacted),
     exportModules: modules || input.exportModules || null,
     assessmentSnapshot: masked ? redact(assessment) : assessment,
   };
+  if (output.investigation) {
+    const sourceKeys = Object.keys(source.results);
+    const outputKeys = Object.keys(output.results);
+    const renamed = new Map(
+      sourceKeys.map((key, index) => [key, outputKeys[index]]),
+    );
+    output.investigation.plannedKeys = input.investigation.plannedKeys
+      .filter((key) => !modules?.length || modules.includes(resultModule(key)))
+      .map(
+        (key, index) =>
+          renamed.get(key) ||
+          (masked ? redact(key) + " [未执行 " + index + "]" : key),
+      );
+  }
+  output.diagnosticSummary = conclusionSummary(output);
+  return output;
 }
 export function resultModule(key) {
   if (/^(risk|score-check|detail|ripe)/.test(key)) return "ip";
@@ -512,7 +526,9 @@ export function reportHTML(input, masked = false) {
   const count = summarize(record);
   const assessment = record.assessmentSnapshot;
   const e = escapeHTML;
-  const resultRows = Object.values(record.results)
+  const conclusion = conclusionSummary(record);
+  const conclusionHTML = `<section><h2>结论摘要</h2><p><b>${e(conclusion.headline)}</b></p><p>范围：${e(conclusion.scope)}${record.exportModules?.length ? "（仅导出所选模块）" : ""} · ${conclusion.errors} 项失败 · ${conclusion.warnings} 项需复查 · ${conclusion.unknown} 项无法确定 · ${conclusion.missing.length} 项尚未执行</p>${conclusion.findings.map((f) => `<details><summary>${e(f.label)} · ${e(f.reason)}</summary><p>${e(f.evidence)}</p><p>建议：${e(f.action)}</p><p class="meta">${e(f.source)} · ${e(f.observedAt)}</p></details>`).join("")}<p class="meta">${e(conclusion.limits)}</p></section>`;
+  const resultRows = diagnosticObservations(record)
     .map(
       (r) =>
         `<section><h2>${e(r.label)}</h2><p><b>${e({ ok: "已取得", unknown: "无法确定", error: "检测失败", running: "未完成" }[r.status])}</b> · ${e(r.summary)}</p><p class="meta">目标：${e(r.target || "当前环境")}<br>来源：${e(r.source)} · ${e(r.execution)} · ${e(r.observedAt)}</p>${r.limitations?.length ? `<p>${e(r.limitations.join("；"))}</p>` : ""}<details><summary>查看原始证据</summary><pre>${e(JSON.stringify(r.data, null, 2))}</pre></details></section>`,
@@ -521,5 +537,5 @@ export function reportHTML(input, masked = false) {
   const comparison = record.reference
     ? `<section><h2>参考配置与结论</h2><p>匹配率：${assessment.percent ?? "未知"}${assessment.percent === null ? "" : "%"}（覆盖 ${assessment.known}/${assessment.total} 项；不是 IP 纯净度或注册成功率）</p><p>${e(assessment.conclusion)}</p><p>${e(assessment.phoneVerification)}</p><table><tr><th>项目</th><th>实测</th><th>参考</th><th>结论</th></tr>${assessment.rows.map((r) => `<tr><td>${e(r.name)}</td><td>${e(r.actual)}</td><td>${e(r.expected)}</td><td>${e({ match: "一致", different: "不同", unknown: "无法确定" }[r.state])}</td></tr>`).join("")}</table></section>`
     : "";
-  return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(record.title)} · 网络诊断台报告</title><style>body{font:15px/1.7 system-ui,sans-serif;max-width:960px;margin:32px auto;padding:0 20px;color:#1c2636}h1{font-size:27px}h2{font-size:17px}.meta{color:#667085;font-size:13px}section{border:1px solid #dfe4ec;border-radius:9px;padding:20px;margin:16px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fb;padding:14px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}button{padding:8px 16px} @media print{button{display:none}details{display:block}section{break-inside:avoid}}</style><h1>${e(record.title)} · 检测报告</h1><p class="meta">Network Desk · ${e(record.id)}<br>采集环境：${e(record.client || "见各项检测来源")}<br>开始：${e(record.createdAt)} · 更新：${e(record.updatedAt)} · ${record.redacted ? "包含脱敏数据" : "包含完整 IP"}</p><p>取得 ${count.obtained} 项 · 无法确定 ${count.unknown} 项 · 失败 ${count.errors} 项 · 未完成 ${count.running} 项。取得数据不等于安全；第三方评分不代表任何平台的官方结论。</p>${comparison}${resultRows}${record.system ? `<section><h2>合并的系统报告</h2><p>采集时间 ${e(record.system.collectedAt)} · 系统脚本观测，不覆盖浏览器结果</p><pre>${e(JSON.stringify(record.system, null, 2))}</pre></section>` : "<p>本报告尚未附加系统 JSON。</p>"}<details><summary>完整合并 JSON</summary><pre>${e(JSON.stringify(record, null, 2))}</pre></details><p class="meta">本文件可离线打开，不加载外部脚本、字体或图片。</p></html>`;
+  return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${e(record.title)} · 网络诊断台报告</title><style>body{font:15px/1.7 system-ui,sans-serif;max-width:960px;margin:32px auto;padding:0 20px;color:#1c2636}h1{font-size:27px}h2{font-size:17px}.meta{color:#667085;font-size:13px}section{border:1px solid #dfe4ec;border-radius:9px;padding:20px;margin:16px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fb;padding:14px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}button{padding:8px 16px} @media print{button{display:none}details{display:block}section{break-inside:avoid}}</style><h1>${e(record.title)} · 检测报告</h1><p class="meta">Network Desk · ${e(record.id)}<br>采集环境：${e(record.client || "见各项检测来源")}<br>开始：${e(record.createdAt)} · 更新：${e(record.updatedAt)} · ${record.redacted ? "包含脱敏数据" : "包含完整 IP"}</p><p>取得 ${count.obtained} 项 · 无法确定 ${count.unknown} 项 · 失败 ${count.errors} 项 · 未完成 ${count.running} 项。取得数据不等于安全；第三方评分不代表任何平台的官方结论。</p>${conclusionHTML}${comparison}${resultRows}${record.system ? `<section><h2>合并的系统报告</h2><p>采集时间 ${e(record.system.collectedAt)} · 系统脚本观测，不覆盖浏览器结果</p><pre>${e(JSON.stringify(record.system, null, 2))}</pre></section>` : "<p>本报告尚未附加系统 JSON。</p>"}<details><summary>完整合并 JSON</summary><pre>${e(JSON.stringify(record, null, 2))}</pre></details><p class="meta">本文件可离线打开，不加载外部脚本、字体或图片。</p></html>`;
 }

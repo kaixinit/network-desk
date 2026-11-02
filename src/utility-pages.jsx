@@ -1,3 +1,5 @@
+import { ConclusionCard } from "./investigation.jsx";
+import { diagnosticObservations } from "../shared/investigation.mjs";
 import React, { useEffect, useRef, useState } from "react";
 import { useDesk } from "./state.jsx";
 import { desktop } from "./storage.mjs";
@@ -852,7 +854,7 @@ export function ReportsPage() {
   const d = useDesk();
   const count = summarize(d.record);
   const [filter, setFilter] = useState("all");
-  const rows = Object.values(d.record.results).filter(
+  const rows = diagnosticObservations(d.record).filter(
     (r) => filter === "all" || r.status === filter,
   );
   return (
@@ -861,6 +863,7 @@ export function ReportsPage() {
         title="报告中心"
         description="汇总本次检测、导入系统 JSON、查看历史和导出可离线打开的合并报告"
       />
+      <ConclusionCard />
       <Card title={d.record.title}>
         <p className="muted">
           记录 {d.record.id} · 更新于{" "}

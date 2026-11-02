@@ -38,7 +38,7 @@ npm run desktop
 npm run desktop:pack
 ```
 
-产物位于 `release/desktop/NetworkDesk-1.2.8-portable.exe`。`desktop:pack` 已包含发布检查、前端构建和图标生成；不要提交生成的 release 或 node_modules。`npm run desktop:dir` 生成未压缩目录供调试，常规网页版本使用 `npm start`。初次安装 Electron 与构建工具会下载官方构建资源，需网络。
+产物位于 `release/desktop/NetworkDesk-1.2.12-portable.exe`。`desktop:pack` 已包含发布检查、前端构建和图标生成；不要提交生成的 release 或 node_modules。`npm run desktop:dir` 生成未压缩目录供调试，常规网页版本使用 `npm start`。初次安装 Electron 与构建工具会下载官方构建资源，需网络。
 
 免安装版使用 AppData 保存私人记录，应用文件虽为单文件，个人数据不会被打进 EXE。配置位置、请求路径和可选密钥见 [配置说明](CONFIGURATION.md)，报告操作见 [使用说明](USAGE.md)。
 

@@ -1,6 +1,6 @@
 {
   "name": "network-desk",
-  "version": "1.2.8",
+  "version": "1.2.12",
   "private": true,
   "type": "module",
   "scripts": {

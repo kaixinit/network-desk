@@ -107,6 +107,17 @@ export function validateObservationData(key, data) {
   )
     throw new Error("报告评分必须在 0–100 之间");
   fields(data.trace, "colo http");
+  if (data.reference != null && key.startsWith("region:")) {
+    itemObject(data.reference);
+    fields(data.reference, "kind product source verifiedAt limitation");
+    fields(data.reference, "expired listed restricted", "boolean");
+    fields(data.reference, "maxAgeDays", "number");
+    if (
+      data.reference.kind !== "bundled-official-reference" ||
+      !Number.isFinite(Date.parse(data.reference.verifiedAt))
+    )
+      throw new Error("地区参考证据格式无效");
+  }
   if (key === "environment")
     fields(
       data,
@@ -116,7 +127,7 @@ export function validateObservationData(key, data) {
     fields(data.raw, "registered_country_code countryCode");
   items(data, "candidates", (x) => {
     itemObject(x);
-    fields(x, "type address");
+    fields(x, "type address protocol");
   });
   items(data, "samples", itemObject);
   items(data, "resolvers", (x) => {

@@ -3,6 +3,7 @@ import { isIP } from "node:net";
 import { domainToASCII } from "node:url";
 import { canonicalIP } from "../shared/model.mjs";
 import { VERSION } from "../shared/version.mjs";
+import { transportError, createTransportTrace } from "./transport-error.mjs";
 
 export function publicIP(value) {
   const ip = canonicalIP(value);
@@ -82,18 +83,22 @@ export async function request(
     limit = 3_000_000,
     proxy,
     family,
+    signal,
     follow = false,
   } = {},
 ) {
   const u = new URL(url);
   if (u.protocol !== "https:" || u.username || u.password)
     throw new Error("数据源必须使用 HTTPS");
+  signal?.throwIfAborted();
   await slot();
   try {
+    signal?.throwIfAborted();
     return await new Promise((resolve, reject) => {
       const args = [
         "--silent",
         "--show-error",
+        "--verbose",
         "--max-time",
         String(Math.ceil(timeout / 1000)),
         "--connect-timeout",
@@ -109,7 +114,7 @@ export async function request(
         "--user-agent",
         "NetworkDesk/" + VERSION,
         "--write-out",
-        "\n__ND_RESULT__%{http_code}|%{time_total}|%{url_effective}",
+        "\n__ND_RESULT__%{http_code}|%{time_total}|%{url_effective}|%{remote_ip}|%{time_namelookup}|%{time_connect}|%{time_appconnect}|%{http_connect}",
       ];
       if (follow) args.push("--location");
       if (method === "HEAD") args.push("--head");
@@ -132,10 +137,16 @@ export async function request(
         { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] },
       );
       children.add(child);
-      child.once("close", () => children.delete(child));
+      const abort = () => child.kill();
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) abort();
+      child.once("close", () => {
+        children.delete(child);
+        signal?.removeEventListener("abort", abort);
+      });
       const chunks = [];
       let length = 0;
-      let errorText = "";
+      const trace = createTransportTrace();
       let exceeded = false;
       const timer = setTimeout(() => child.kill(), timeout + 2500);
       child.stdout.on("data", (part) => {
@@ -146,7 +157,7 @@ export async function request(
         } else chunks.push(part);
       });
       child.stderr.on("data", (part) => {
-        if (errorText.length < 1000) errorText += part.toString();
+        trace.push(part.toString());
       });
       child.on("error", (e) => {
         clearTimeout(timer);
@@ -160,15 +171,28 @@ export async function request(
       });
       child.on("close", (code) => {
         clearTimeout(timer);
-        if (exceeded) return reject(new Error("上游响应超过大小限制"));
-        if (code !== 0)
+        if (signal?.aborted)
           return reject(
-            new Error(
-              `连接失败或超时（curl ${code ?? "terminated"}）${errorText.includes("Could not resolve") ? "：DNS 解析失败" : ""}`,
-            ),
+            signal.reason || new DOMException("已停止", "AbortError"),
           );
+        if (exceeded) return reject(new Error("上游响应超过大小限制"));
         const text = Buffer.concat(chunks).toString("utf8");
         const at = text.lastIndexOf("\n__ND_RESULT__");
+        const parts = at < 0 ? [] : text.slice(at + 14).split("|");
+        const ms = (value) =>
+          value && Number.isFinite(Number(value))
+            ? Math.round(Number(value) * 1000)
+            : null;
+        const transportDetails = {
+          ...trace.snapshot(),
+          httpConnectStatus: Number(parts[7]) || null,
+          remoteIP: parts[3] || null,
+          dnsMs: ms(parts[4]),
+          connectMs: ms(parts[5]),
+          tlsMs: ms(parts[6]),
+          elapsedMs: ms(parts[1]),
+        };
+        if (code !== 0) return reject(transportError(code, transportDetails));
         if (at < 0) return reject(new Error("无法读取请求结果"));
         const [status, time, effective] = text.slice(at + 14).split("|");
         resolve({
@@ -177,6 +201,7 @@ export async function request(
           url: effective,
           body: text.slice(0, at),
           checkedAt: new Date().toISOString(),
+          transportDetails,
         });
       });
       child.stdin.on("error", () => {});

@@ -4,15 +4,15 @@ import { Icon, Badge, ReportActions } from "./components.jsx";
 import { desktop } from "./storage.mjs";
 import { validateSystem, prepareExport, reportHTML } from "../shared/model.mjs";
 import { download } from "./checks.mjs";
+import { diagnosticObservations } from "../shared/investigation.mjs";
 
 export function DesktopDock() {
   const d = useDesk();
   const [collecting, setCollecting] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const entries = Object.values(d.record.results).filter(
-    (r) => !["webrtc", "dns-leak"].includes(r.key),
-  );
+  const entries = diagnosticObservations(d.record);
   const pending = entries.filter((r) => r.status === "running");
+  const investigationRunning = d.record.investigation?.state === "running";
   const done = entries.length - pending.length;
   const issues = entries.filter((r) =>
     ["unknown", "error"].includes(r.status),
@@ -77,8 +77,8 @@ export function DesktopDock() {
           <span>
             {collecting
               ? "正在采集系统信息…"
-              : pending.length
-                ? pending[0].label
+              : pending.length || investigationRunning
+                ? pending[0]?.label || "综合排查正在安排后续项目…"
                 : entries.length
                   ? "本轮检测已结束"
                   : "等待开始检测"}
@@ -102,10 +102,16 @@ export function DesktopDock() {
               : "查看真实结果"}
         </Badge>
         <div className="dock-actions">
-          <button disabled={collecting} onClick={collect}>
+          <button
+            disabled={collecting || investigationRunning}
+            onClick={collect}
+          >
             <Icon name="gear" /> {collecting ? "采集中…" : "采集系统信息"}
           </button>
-          <button disabled={!pending.length} onClick={d.stop}>
+          <button
+            disabled={!pending.length && !investigationRunning}
+            onClick={d.stop}
+          >
             <Icon name="pause" /> 停止
           </button>
           <button

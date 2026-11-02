@@ -7,6 +7,7 @@ import "./observations.css";
 import "./desktop.css";
 import "./batch-table.css";
 import "./compact.css";
+import "./investigation.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

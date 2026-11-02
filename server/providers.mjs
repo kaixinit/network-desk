@@ -13,6 +13,7 @@ import {
   validateProxy,
 } from "./net.mjs";
 import { TARGETS, STATUS_SOURCES, FEEDS, DETAIL_SECTIONS } from "./catalog.mjs";
+import { lookupEvidence } from "./probe-evidence.mjs";
 
 const coffee = "https://ip.net.coffee";
 const safe = async (fn) => {
@@ -22,7 +23,11 @@ const safe = async (fn) => {
     return { ok: false, error: e.message, checkedAt: new Date().toISOString() };
   }
 };
-export async function probe(params, transport = request) {
+export async function probe(
+  params,
+  transport = request,
+  resolveEvidence = lookupEvidence,
+) {
   const target = TARGETS[params.target];
   if (!target) throw new Error("未知探测目标");
   const proxy = validateProxy(params);
@@ -30,31 +35,83 @@ export async function probe(params, transport = request) {
   let method = ["http", "ip-header"].includes(target.kind) ? "HEAD" : "GET";
   const options = {
     proxy,
+    signal: params.signal,
     family: ["4", "6"].includes(params.family) ? params.family : undefined,
     method,
   };
-  let r = await transport(target.url, options);
+  let r, firstError;
   const attempt = (verb, reply) => ({
     method: verb,
     httpStatus: reply.status,
     elapsedMs: reply.elapsedMs,
     checkedAt: reply.checkedAt,
+    transportDetails: reply.transportDetails,
   });
-  const attempts = [attempt(method, r)];
+  const failure = (verb, error) => ({
+    method: verb,
+    error: error.message,
+    failureKind: error.failureKind || "transport",
+    transportDetails: error.transportDetails || null,
+    checkedAt: new Date().toISOString(),
+  });
+  const attempts = [];
+  options.signal?.throwIfAborted();
+  try {
+    r = await transport(target.url, options);
+    attempts.push(attempt(method, r));
+  } catch (e) {
+    if (target.kind !== "http" || e.name === "AbortError") throw e;
+    firstError = e;
+    attempts.push(failure(method, e));
+  }
   // Some sites reject or misroute HEAD. Keep both observations in reports.
-  if (target.kind === "http" && [403, 404, 405, 501].includes(r.status)) {
+  if (
+    target.kind === "http" &&
+    (!r || [403, 404, 405, 501].includes(r.status))
+  ) {
+    options.signal?.throwIfAborted();
     try {
       const next = await transport(target.url, { ...options, method: "GET" });
       attempts.push(attempt("GET", next));
       r = next;
       method = "GET";
     } catch (e) {
-      attempts.push({
-        method: "GET",
-        error: e.message,
-        checkedAt: new Date().toISOString(),
-      });
+      if (e.name === "AbortError") throw e;
+      attempts.push(failure("GET", e));
     }
+  }
+  if (!r) {
+    options.signal?.throwIfAborted();
+    const last = attempts.at(-1);
+    const dnsEvidence = await resolveEvidence(target.url);
+    const reason = `HEAD 与 GET 两次请求均未取得响应：${last.error}`;
+    return {
+      target: params.target,
+      label: target.label,
+      source: target.url,
+      execution: "local-service",
+      route: proxy.mode,
+      proxyEndpoint: ["local", "socks5"].includes(proxy.mode)
+        ? `${proxy.mode === "socks5" ? "socks5h" : "http"}://127.0.0.1:${proxy.port}`
+        : null,
+      method: "GET",
+      attempts,
+      httpStatus: null,
+      ip: null,
+      elapsedMs: null,
+      error: reason,
+      reason,
+      failureKind: last.failureKind,
+      dnsEvidence,
+      checkedAt: last.checkedAt,
+      action: ["tls-timeout", "tls"].includes(last.failureKind)
+        ? "核对当前代理节点到目标站点的连接及 TLS 握手；隧道建立不等于目标 HTTPS 已可用。请先对照直连与当前节点的结果，再决定是否调整分流；不要关闭证书校验。软件未改变代理设置。"
+        : last.failureKind === "proxy-tunnel"
+          ? "检查所选本机代理端口及认证要求；代理拒绝 CONNECT 不代表目标网站故障。"
+          : dnsEvidence.syntheticProxyAddress
+            ? "本机解析结果包含代理映射地址；结合失败阶段核对代理是否接管该域名及其分流规则。映射地址本身不代表故障，本软件未改变代理设置。"
+            : "同一路径复测仍未取得响应；核对网络、域名解析和本应用请求方式后重试。",
+    };
   }
   let data = {};
   if (target.kind === "trace") data = parseTrace(r.body);
@@ -88,6 +145,7 @@ export async function probe(params, transport = request) {
     route: proxy.mode,
     method,
     attempts,
+    recovered: Boolean(firstError),
     proxyEndpoint: ["local", "socks5"].includes(proxy.mode)
       ? `${proxy.mode === "socks5" ? "socks5h" : "http"}://127.0.0.1:${proxy.port}`
       : null,

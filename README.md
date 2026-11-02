@@ -2,7 +2,7 @@
 
 中文本地网络诊断工具，提供 Windows 免安装桌面版和本地网页版。将 IP 出口、平台环境、DNS、WebRTC、连通性和系统信息汇总为可导出的报告。
 
-**当前版本：1.2.8 · Windows x64 · MIT（自主编写代码）**
+**当前版本：1.2.12 · Windows x64 · MIT（自主编写代码）**
 
 只监听 `127.0.0.1`，不要求管理员权限，不修改系统代理、网卡、时区或防火墙。实时检测会访问第三方服务，不是完全离线工具。
 
@@ -10,13 +10,22 @@
 
 | 方式                                    | 使用方法                        | 条件                                                       |
 | --------------------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `NetworkDesk-1.2.8-portable.exe`        | 双击使用桌面版                  | Windows 10/11 x64，无须安装 Node.js                        |
-| `NetworkDesk-1.2.8-windows-x64.zip`     | 解压后双击 `启动网络诊断台.cmd` | 包内含 Node.js，在 Edge/Chrome 等浏览器中使用              |
-| 本仓库 / `NetworkDesk-1.2.8-source.zip` | 安装依赖、构建后运行            | Node.js 22.12+ 的受支持版本，建议与 CI 一样使用 Node.js 24 |
+| `NetworkDesk-1.2.12-portable.exe`        | 双击使用桌面版                  | Windows 10/11 x64，无须安装 Node.js                        |
+| `NetworkDesk-1.2.12-windows-x64.zip`     | 解压后双击 `启动网络诊断台.cmd` | 包内含 Node.js，在 Edge/Chrome 等浏览器中使用              |
+| 本仓库 / `NetworkDesk-1.2.12-source.zip` | 安装依赖、构建后运行            | Node.js 22.12+ 的受支持版本，建议与 CI 一样使用 Node.js 24 |
 
 EXE 和运行包由发布者放在 GitHub Releases。源码 ZIP 是构建输入，不包含运行时或构建好的前端。实时请求依赖系统 `curl`，Windows 系统采集依赖 PowerShell。
 
 ## 快速开始
+
+### 一次排查与交付
+
+1. 首页“一键综合排查”选择基础网络、Claude、GPT / OpenAI、Google / Gmail，点击“开始综合排查”。这会创建新记录，公共检测只执行一次，各平台保留独立出口与证据。
+2. 桌面版可勾选“合并只读系统信息”，自动采集并合并；网页版继续支持导入系统 JSON。全部操作不修改系统代理设置。
+3. 在“结论摘要”查看失败、HTTP 拒绝、待复查和证据不足项目，展开查看原因、来源与下一步建议。停止后的记录明确标注未完整结束。
+4. 点击“导出交付包”，预览范围和脱敏内容后保存 ZIP。内含可离线阅读的 `report.html`、可回读的 `report.json`、使用说明和 SHA-256 校验值，均取自同一快照。
+
+综合排查与原有栏目并存；Whois、全球 Ping、Cloudflare 测速等专项功能仍可在对应栏目使用，不会随综合排查自动运行。
 
 ### 桌面版
 
@@ -99,7 +108,7 @@ npm audit --audit-level=low
 npm run package
 ```
 
-`package` 生成 `release/NetworkDesk-1.2.8-source.zip` 和不含 Node 的 `local-node.zip`。设置 `NETWORK_DESK_NODE_DIR` 指向官方 Windows x64 Node 解压目录后，生成含运行时的 `windows-x64.zip`。ZIP 内附逐文件 `FILE-SHA256.json`。
+`package` 生成 `release/NetworkDesk-1.2.12-source.zip` 和不含 Node 的 `local-node.zip`。设置 `NETWORK_DESK_NODE_DIR` 指向官方 Windows x64 Node 解压目录后，生成含运行时的 `windows-x64.zip`。ZIP 内附逐文件 `FILE-SHA256.json`。
 
 Windows 单文件 EXE 构建：
 
@@ -108,7 +117,7 @@ npm exec install-electron
 npm run desktop:pack
 ```
 
-产物为 `release/desktop/NetworkDesk-1.2.8-portable.exe`。构建条件与签名边界见 [桌面构建](docs/DESKTOP.md)。仓库有自动源码检查及手动 `windows-portable` Actions 工作流，默认不自动发布，也不要求发布令牌。
+产物为 `release/desktop/NetworkDesk-1.2.12-portable.exe`。构建条件与签名边界见 [桌面构建](docs/DESKTOP.md)。仓库有自动源码检查及手动 `windows-portable` Actions 工作流，默认不自动发布，也不要求发布令牌。
 
 ## 上传 GitHub
 
