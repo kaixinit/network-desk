@@ -29,7 +29,7 @@
     "electron": "45.2.1",
     "electron-builder": "26.18.0",
     "fflate": "0.8.3",
-    "prettier": "3.6.2",
+    "prettier": "3.9.10",
     "@vitejs/plugin-react": "5.0.4",
     "bootstrap-icons": "1.13.1",
     "react": "19.2.0",
