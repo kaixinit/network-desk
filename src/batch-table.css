@@ -1,0 +1,325 @@
+/* Category accents identify destinations; badges alone show observed status. */
+.target-batch {
+  --card-accent: var(--violet);
+  border-top: 3px solid var(--brand);
+}
+.target-batch > .card-heading {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.batch-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  font-size: 12px;
+}
+.batch-toolbar {
+  margin-bottom: 12px;
+}
+.target-batch .target-options label {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+.target-batch .target-options label:has(input:checked) {
+  color: var(--brand);
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
+  background: var(--brand-soft);
+}
+.batch-note {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--brand-soft) 65%, var(--bg));
+  border-radius: 8px;
+  color: var(--soft);
+  line-height: 1.7;
+}
+.batch-note > i {
+  color: var(--brand);
+}
+.batch-table {
+  border-collapse: separate;
+  border-spacing: 0 9px;
+  table-layout: fixed;
+  font-size: 13px;
+}
+.batch-table th {
+  padding: 12px 14px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border: 0;
+}
+.batch-table th:first-child {
+  width: 19%;
+  border-radius: 8px 0 0 8px;
+}
+.batch-table th:nth-child(2) {
+  width: 36%;
+}
+.batch-table th:nth-child(3) {
+  width: 18%;
+}
+.batch-table th:last-child {
+  width: 27%;
+  border-radius: 0 8px 8px 0;
+}
+.batch-edge th:first-child {
+  width: 18%;
+}
+.batch-edge th:nth-child(2) {
+  width: 30%;
+}
+.batch-edge th:nth-child(3) {
+  width: 12%;
+}
+.batch-edge th:nth-child(4) {
+  width: 16%;
+}
+.batch-edge th:last-child {
+  width: 24%;
+}
+.batch-table tr {
+  --batch-accent: var(--brand);
+  --batch-tint: var(--brand-soft);
+}
+.batch-table tr[data-tone="amber"] {
+  --batch-accent: var(--amber);
+  --batch-tint: var(--amber-soft);
+}
+.batch-table tr[data-tone="violet"] {
+  --batch-accent: var(--violet);
+  --batch-tint: var(--violet-soft);
+}
+.batch-table tr[data-tone="teal"] {
+  --batch-accent: var(--teal);
+  --batch-tint: var(--teal-soft);
+}
+.batch-table td {
+  padding: 15px 14px;
+  vertical-align: middle;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--batch-tint) 15%, var(--bg));
+}
+.batch-table td:first-child {
+  border-left: 4px solid var(--batch-accent);
+  border-radius: 10px 0 0 10px;
+  background: color-mix(in srgb, var(--batch-tint) 60%, var(--bg));
+}
+.batch-table td:last-child {
+  border-right: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+}
+.batch-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--batch-tint) 45%, var(--bg));
+}
+.batch-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.batch-symbol {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 36px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: var(--batch-tint);
+  color: var(--batch-accent);
+  font-size: 19px;
+}
+.batch-identity strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.batch-identity small {
+  display: block;
+  margin-top: 4px;
+  color: var(--soft);
+  font-size: 11px;
+}
+.batch-ip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--batch-accent) 22%, var(--border));
+  border-radius: 7px;
+  background: var(--bg);
+}
+.batch-ip code {
+  min-width: 0;
+  flex: 1;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.batch-ip .icon-button {
+  flex-shrink: 0;
+  padding: 2px;
+  color: var(--batch-accent);
+}
+.batch-links {
+  margin-top: 8px;
+}
+.batch-links .ip-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+}
+.batch-links a {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 5px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--border));
+  text-decoration: none;
+}
+.batch-links a:nth-child(2) {
+  color: var(--violet);
+  background: var(--violet-soft);
+}
+.batch-links a:nth-child(3) {
+  color: var(--teal);
+  background: var(--teal-soft);
+}
+.batch-links a:hover {
+  border-color: currentColor;
+  text-decoration: underline;
+}
+.batch-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  font-size: 12px;
+}
+.batch-path.is-local {
+  color: var(--violet);
+  background: var(--violet-soft);
+}
+.batch-time {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 9px 0 0 2px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.batch-time i,
+.batch-time small {
+  color: var(--soft);
+  font-size: 11px;
+  font-weight: 400;
+}
+.batch-result-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.batch-result-top .badge {
+  font-size: 11px;
+}
+.batch-result-top button {
+  padding: 4px 8px;
+  color: var(--brand);
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--brand) 25%, var(--border));
+}
+.batch-result-top button:hover:not(:disabled) {
+  background: var(--brand-soft);
+}
+.batch-result .batch-obtained,
+.batch-result .result-line {
+  margin: 8px 0 7px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.batch-obtained {
+  color: var(--soft);
+}
+.batch-result .evidence {
+  margin: 0;
+  font-size: 11px;
+}
+.batch-result .evidence summary {
+  color: var(--soft);
+}
+.batch-result .evidence pre {
+  max-height: 260px;
+}
+.batch-edge-info {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+  .batch-table,
+  .batch-table tbody {
+    display: block;
+  }
+  .batch-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .batch-table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 10px 0;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--batch-accent);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .batch-table td,
+  .batch-table td:first-child,
+  .batch-table td:last-child {
+    display: block;
+    border: 0;
+    border-radius: 0;
+    padding: 12px;
+    min-width: 0;
+  }
+  .batch-table .batch-target {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .batch-table .batch-route {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+  .batch-time {
+    justify-content: flex-end;
+  }
+  .batch-table .batch-address,
+  .batch-table .batch-edge-info,
+  .batch-table .batch-result {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+  }
+  .batch-edge-info::before {
+    content: attr(data-label) "：";
+    color: var(--soft);
+  }
+  .batch-ip code {
+    font-size: 13px;
+  }
+}

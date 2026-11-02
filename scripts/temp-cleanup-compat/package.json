@@ -1,0 +1,9 @@
+{
+  "name": "@network-desk/temp-cleanup-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Exact-path cleanup adapter for temp 0.9.4 using Node fs.rm; not a general rimraf replacement",
+  "license": "MIT",
+  "main": "index.cjs",
+  "engines": { "node": ">=22.12" }
+}

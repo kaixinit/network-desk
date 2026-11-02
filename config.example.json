@@ -1,0 +1,10 @@
+{
+  "ipapiKey": "",
+  "globalpingToken": "",
+  "turnstileSiteKey": "",
+  "turnstileSecret": "",
+  "turnstileNoninteractiveSiteKey": "",
+  "turnstileNoninteractiveSecret": "",
+  "recaptchaSiteKey": "",
+  "recaptchaSecret": ""
+}

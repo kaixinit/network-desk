@@ -1,0 +1,50 @@
+{
+  "appId": "org.networkdesk.desktop",
+  "productName": "Network Desk",
+  "directories": { "output": "release/desktop" },
+  "asar": true,
+  "electronDist": "node_modules/electron/dist",
+  "files": ["desktop/**", "package.json", "!node_modules/**"],
+  "extraResources": [
+    { "from": "server", "to": "desk/server" },
+    { "from": "shared", "to": "desk/shared" },
+    { "from": "dist/client", "to": "desk/dist/client" },
+    {
+      "from": "scripts/collect-system.ps1",
+      "to": "desk/scripts/collect-system.ps1"
+    },
+    {
+      "from": "docs",
+      "to": "desk/docs",
+      "filter": [
+        "USAGE.md",
+        "CONFIGURATION.md",
+        "PUBLISHING.md",
+        "DESKTOP.md",
+        "ARCHITECTURE.md",
+        "PROVENANCE.md",
+        "DEPENDENCIES-1.2.7.md",
+        "COMPACT-LAYOUT-1.2.7.md",
+        "REVIEW-1.2.8.txt"
+      ]
+    },
+    { "from": "licenses", "to": "desk/licenses" },
+    { "from": "LICENSE", "to": "desk/LICENSE" },
+    { "from": "SECURITY.md", "to": "desk/SECURITY.md" },
+    { "from": "THIRD_PARTY_NOTICES.md", "to": "desk/THIRD_PARTY_NOTICES.md" },
+    { "from": "config.example.json", "to": "desk/config.example.json" }
+  ],
+  "win": {
+    "target": [{ "target": "portable", "arch": ["x64"] }],
+    "icon": "desktop/assets/icon.ico",
+    "artifactName": "NetworkDesk-${version}-portable.exe",
+    "requestedExecutionLevel": "asInvoker",
+    "executableName": "NetworkDesk"
+  },
+  "portable": {
+    "requestExecutionLevel": "user",
+    "unpackDirName": "NetworkDeskPortable-1.2.0"
+  },
+  "forceCodeSigning": false,
+  "npmRebuild": false
+}

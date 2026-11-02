@@ -1,0 +1,298 @@
+/* Scoped presentation for the home page's egress evidence table. */
+.observation-card {
+  padding: 0;
+  overflow: hidden;
+}
+.observation-card > .card-heading {
+  margin: 0;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(105deg, var(--brand-soft), var(--bg) 80%);
+}
+.observation-count {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--soft);
+  background: var(--bg);
+}
+.observation-count i {
+  color: var(--brand);
+}
+.observation-card > .table-scroll {
+  padding: 5px 14px 12px;
+}
+.observation-table {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  table-layout: fixed;
+}
+.observation-table th {
+  border: 0;
+  padding: 9px 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+.observation-table th:first-child {
+  width: 20%;
+  border-radius: 7px 0 0 7px;
+}
+.observation-table th:nth-child(2) {
+  width: 33%;
+}
+.observation-table th:nth-child(3) {
+  width: 15%;
+}
+.observation-table th:last-child {
+  width: 32%;
+  border-radius: 0 7px 7px 0;
+}
+.observation-table tbody tr {
+  --row-accent: var(--brand);
+  --row-tint: var(--brand-soft);
+}
+.observation-table tr[data-egress="ipv6"] {
+  --row-accent: var(--violet);
+  --row-tint: var(--violet-soft);
+}
+.observation-table tr[data-egress="domestic"],
+.observation-table tr[data-egress="chatgpt"],
+.observation-table tr[data-egress="openai"] {
+  --row-accent: var(--teal);
+  --row-tint: var(--teal-soft);
+}
+.observation-table tr[data-egress="cloudflare"],
+.observation-table tr[data-egress="claude"] {
+  --row-accent: var(--amber);
+  --row-tint: var(--amber-soft);
+}
+.observation-table td {
+  padding: 13px 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  vertical-align: top;
+}
+.observation-table td:first-child {
+  border-left: 3px solid var(--row-accent);
+  border-radius: 9px 0 0 9px;
+  background: color-mix(in srgb, var(--row-tint) 50%, var(--bg));
+}
+.observation-table td:last-child {
+  border-right: 1px solid var(--border);
+  border-radius: 0 9px 9px 0;
+}
+.observation-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--row-tint) 35%, var(--bg));
+}
+.observation-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+}
+.observation-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  color: var(--row-accent);
+  background: var(--row-tint);
+  font-size: 16px;
+}
+.observation-identity strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+}
+.observation-identity small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.observation-ip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 7px;
+  padding: 8px 9px;
+  border-radius: 7px;
+  background: var(--subtle);
+  min-width: 0;
+}
+.observation-ip code {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  white-space: normal;
+  user-select: text;
+}
+.observation-ip .icon-button {
+  padding: 2px 3px;
+  flex-shrink: 0;
+  color: var(--brand);
+  border-radius: 4px;
+}
+.observation-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  margin-top: 2px;
+  border-radius: 6px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.observation-path.path-local-service,
+.observation-path.path-fallback {
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+.observation-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.observation-actions .badge {
+  font-size: 10px;
+  padding: 3px 6px;
+  flex-shrink: 0;
+}
+.observation-actions .ip-links {
+  display: inline-flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.observation-actions .ip-links a {
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, var(--border));
+  background: var(--brand-soft);
+  color: var(--brand);
+  padding: 3px 6px;
+  text-decoration: none;
+}
+.observation-actions .ip-links a:nth-child(2) {
+  color: var(--violet);
+  background: var(--violet-soft);
+  border-color: color-mix(in srgb, var(--violet) 18%, var(--border));
+}
+.observation-actions .ip-links a:nth-child(3) {
+  color: var(--teal);
+  background: var(--teal-soft);
+  border-color: color-mix(in srgb, var(--teal) 18%, var(--border));
+}
+.observation-actions .ip-links a:hover {
+  border-color: currentColor;
+  box-shadow: 0 2px 5px #28456b12;
+}
+.observation-tools > .evidence {
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--soft);
+}
+.observation-tools > .evidence > summary {
+  padding: 0;
+  color: var(--muted);
+}
+.observation-tools .evidence p {
+  margin: 9px 0;
+  overflow-wrap: anywhere;
+}
+.observation-tools .evidence pre {
+  max-height: 250px;
+}
+.observation-note {
+  margin: 6px 0 0;
+  color: var(--soft);
+  font-size: 11px;
+}
+[data-theme="dark"] .observation-actions .badge.error {
+  color: #ffb3b3;
+  background: #452b34;
+}
+@media (max-width: 760px) {
+  .observation-card > .card-heading {
+    padding: 15px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .observation-count {
+    font-size: 10px;
+  }
+  .observation-card > .table-scroll {
+    padding: 0 12px 12px;
+  }
+  .observation-table,
+  .observation-table tbody {
+    display: block;
+  }
+  .observation-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .observation-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--row-accent);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .observation-table td,
+  .observation-table td:first-child,
+  .observation-table td:last-child {
+    display: block;
+    border: 0;
+    border-radius: 0;
+    padding: 10px 12px;
+    background: transparent;
+    min-width: 0;
+  }
+  .observation-table .observation-target {
+    grid-column: 1;
+    grid-row: 1;
+    background: color-mix(in srgb, var(--row-tint) 45%, var(--bg));
+  }
+  .observation-table .observation-route {
+    grid-column: 2;
+    grid-row: 1;
+    padding-left: 0;
+    background: color-mix(in srgb, var(--row-tint) 45%, var(--bg));
+  }
+  .observation-table .observation-address {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding-bottom: 2px;
+  }
+  .observation-table .observation-tools {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .observation-path {
+    max-width: 100px;
+  }
+}
